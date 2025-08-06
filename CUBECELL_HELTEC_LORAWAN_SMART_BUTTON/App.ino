@@ -6,7 +6,7 @@
 #include <EEPROM.h>
 
 
-#define FLOW_INPUT_GPIO GPIO4
+#define SMART_BUTTON_GPIO GPIO4
 #define RED_LED GPIO3
 unsigned long long previousMillisRxTimeout = 0;
 unsigned long long prevMotionMillis = 0;
@@ -14,7 +14,7 @@ unsigned long long currMotionMillis = 0;
 uint16_t updateDelay;
 String HubId = "";
 String SensorID = "";
-String deviceTypes = "flow switch";
+String deviceTypes = "button";
 bool PairCmdReceived = false;
 bool CanDeviceSleep = false;
 
@@ -30,7 +30,8 @@ typedef enum {
   DEV_VALVE,
   DEV_REMOTE,
   DEV_FLOW,
-  DEV_MOTION
+  DEV_MOTION,
+  DEV_BUTTON
 } deviceType_t;
 
 typedef struct {
@@ -142,13 +143,13 @@ void onFlowSleep() {
   // No need
 
   /*Serial.printf("Wakeup after 30 sec.........p\r\n \r\n");
-  attachInterrupt(FLOW_INPUT_GPIO, onFlowWakeUp, RISING);
+  attachInterrupt(SMART_BUTTON_GPIO, onButtonPressWakeUp, RISING);
   // TimerStop(&flowSleep);
   delay(5);
   */
 }
-void onFlowWakeUp() {
-  Serial.println("Flow detected....");
+void onButtonPressWakeUp() {
+  Serial.println("Button press....");
   digitalWrite(RED_LED, HIGH);
   delay(300);
   digitalWrite(RED_LED, LOW);
@@ -165,7 +166,7 @@ void onFlowWakeUp() {
 
     counterDeepSleep++;
   }
-  // detachInterrupt(FLOW_INPUT_GPIO);
+  // detachInterrupt(SMART_BUTTON_GPIO);
 }
 //--------------------------------- PIR Trigger End ---------------------------------//
 
@@ -218,11 +219,11 @@ void app_init() {
   lora_app_init();
   Radio.Sleep();
 
-  pinMode(FLOW_INPUT_GPIO, INPUT_PULLDOWN);
+  pinMode(SMART_BUTTON_GPIO, INPUT_PULLDOWN);
   pinMode(RED_LED, OUTPUT);
   digitalWrite(RED_LED, LOW);
 #if 1  //Disable for testing by Ashish
-  attachInterrupt(FLOW_INPUT_GPIO, onFlowWakeUp, RISING);
+  attachInterrupt(SMART_BUTTON_GPIO, onButtonPressWakeUp, RISING);
   TimerInit(&flowSleep, onFlowSleep);
 #endif
 
@@ -240,7 +241,7 @@ void app_loop() {
       delay(50);
       Serial.println("Entering in sleep mode");
       Serial.flush();
-      attachInterrupt(FLOW_INPUT_GPIO, onFlowWakeUp, RISING);
+      attachInterrupt(SMART_BUTTON_GPIO, onButtonPressWakeUp, RISING);
       delay(10);
       lowPowerHandler();
     }
